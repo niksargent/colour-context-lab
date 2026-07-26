@@ -61,20 +61,52 @@ function runPaths(runId) {
 
 function writeMeta(meta) {
   const { meta: target } = runPaths(meta.id);
-  const temp = `${target}.tmp`;
-  fs.writeFileSync(temp, `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
-  fs.renameSync(temp, target);
+  const temp = `${target}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  retryBusyFileOperation(() => fs.writeFileSync(temp, `${JSON.stringify(meta, null, 2)}\n`, 'utf8'));
+  retryBusyFileOperation(() => fs.renameSync(temp, target));
 }
 
 function appendRow(runId, row) {
-  fs.appendFileSync(runPaths(runId).rows, `${JSON.stringify(row)}\n`, 'utf8');
+  retryBusyFileOperation(() => fs.appendFileSync(runPaths(runId).rows, `${JSON.stringify(row)}\n`, 'utf8'));
+}
+
+function retryBusyFileOperation(operation, attempts = 7) {
+  let lastError;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try { return operation(); }
+    catch (error) {
+      lastError = error;
+      if (!['EBUSY', 'EPERM', 'EACCES'].includes(error?.code) || attempt === attempts - 1) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20 * (2 ** attempt));
+    }
+  }
+  throw lastError;
+}
+
+function readRows(runId) {
+  const target = runPaths(runId).rows;
+  if (!fs.existsSync(target)) return [];
+  return fs.readFileSync(target, 'utf8').split(/\r?\n/).filter(Boolean).flatMap(line => {
+    try { return [JSON.parse(line)]; }
+    catch { return []; }
+  });
+}
+
+function reconcileRunMeta(meta) {
+  const rows = readRows(meta.id);
+  if (!rows.length) return meta;
+  const succeeded = rows.filter(row => row.status === 'ok').length;
+  const failed = rows.filter(row => row.status === 'error').length;
+  const completed = rows.length;
+  if (meta.succeeded === succeeded && meta.failed === failed && meta.completed === completed) return meta;
+  return { ...meta, completed, succeeded, failed, reconciledFromResults: true };
 }
 
 function listRuns() {
   return fs.readdirSync(RESULTS_DIR)
     .filter(name => name.endsWith('.json') && !name.endsWith('.tmp'))
     .map(name => {
-      try { return JSON.parse(fs.readFileSync(path.join(RESULTS_DIR, name), 'utf8')); }
+      try { return reconcileRunMeta(JSON.parse(fs.readFileSync(path.join(RESULTS_DIR, name), 'utf8'))); }
       catch { return null; }
     })
     .filter(Boolean)
@@ -220,7 +252,6 @@ async function executeRun(run, secret) {
           latencyMs: Date.now() - started,
           ...output
         };
-        run.succeeded++;
       } catch (error) {
         row = {
           schemaVersion: 2,
@@ -241,11 +272,12 @@ async function executeRun(run, secret) {
           latencyMs: Date.now() - started,
           error: safeError(error)
         };
-        if (row.status === 'error') run.failed++;
       } finally {
         run.controllers.delete(controller);
       }
       appendRow(run.id, row);
+      if (row.status === 'ok') run.succeeded++;
+      if (row.status === 'error') run.failed++;
       run.completed++;
       run.updatedAt = new Date().toISOString();
     }
@@ -287,11 +319,9 @@ async function handleApi(req, res, url) {
     const paths = runPaths(id);
     const live = activeRuns.get(id);
     let meta = live ? publicRun(live) : null;
-    if (!meta && fs.existsSync(paths.meta)) meta = JSON.parse(fs.readFileSync(paths.meta, 'utf8'));
+    if (!meta && fs.existsSync(paths.meta)) meta = reconcileRunMeta(JSON.parse(fs.readFileSync(paths.meta, 'utf8')));
     if (!meta) return sendJson(res, 404, { error: 'Run not found.' });
-    const observations = fs.existsSync(paths.rows)
-      ? fs.readFileSync(paths.rows, 'utf8').split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line))
-      : [];
+    const observations = readRows(id);
     return sendJson(res, 200, { meta, observations });
   }
   if (req.method === 'GET' && url.pathname === '/api/analytics') {

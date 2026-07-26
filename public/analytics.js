@@ -1,7 +1,7 @@
-const atlasState={dataset:null,runs:[],payload:null,scope:'question',model:'all',reasoning:'all',resolution:'hue',sort:'dataset',fieldMode:'dots',compareBy:'model',mapMode:'glow',expanded:new Set(),loaded:false};
+const atlasState={dataset:null,runs:[],payload:null,scope:'question',model:'all',reasoning:'all',resolution:'hue',sort:'dataset',fieldMode:'dots',compareBy:'model',matrixMetric:'distance',matrixFamily:'all',mapMode:'glow',expanded:new Set(),loaded:false};
 const HUE_ORDER=['red','orange','yellow','green','cyan','blue','purple','pink','brown','grey','white','black','unknown'];
 const HUE_HEX={red:'#ef4035',orange:'#f57a21',yellow:'#ffd72e',green:'#19a66a',cyan:'#18b8c3',blue:'#1464f4',purple:'#8b5cf6',pink:'#f472b6',brown:'#8b5a37',grey:'#9aa3aa',white:'#f7f7f2',black:'#161b20',unknown:'#c7cdd2'};
-function atlasHue(hex){if(!/^#[0-9a-f]{6}$/i.test(hex||''))return'unknown';const [r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255),M=Math.max(r,g,b),m=Math.min(r,g,b),d=M-m,s=M?d/M:0;if(M<.18)return'black';if(s<.12)return M>.9?'white':'grey';let h=0;if(d){if(M===r)h=60*(((g-b)/d)%6);else if(M===g)h=60*((b-r)/d+2);else h=60*((r-g)/d+4)}if(h<0)h+=360;if(h<15||h>=345)return'red';if(h<45)return M<.7?'brown':'orange';if(h<70)return'yellow';if(h<165)return'green';if(h<200)return'cyan';if(h<255)return'blue';if(h<295)return'purple';return'pink'}
+function atlasHue(hex){if(!/^#[0-9a-f]{6}$/i.test(hex||''))return'unknown';const [r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255),M=Math.max(r,g,b),m=Math.min(r,g,b),d=M-m,s=M?d/M:0;if(M<.18)return'black';if(s<.12)return M>.9?'white':'grey';let h=0;if(d){if(M===r)h=60*(((g-b)/d)%6);else if(M===g)h=60*((b-r)/d+2);else h=60*((r-g)/d+4)}if(h<0)h+=360;if(h<15||h>=345)return'red';if(h<45)return M<.7?'brown':'orange';if(h<70)return'yellow';if(h<165)return'green';if(h<200)return'cyan';if(h<255)return'blue';if(h<325)return'purple';return'pink'}
 function atlasKey(row,res=atlasState.resolution){return res==='exact'?normaliseColour(row.colour).replace(/^a\s+/,''):atlasHue(row.hex)}
 function atlasDist(rows,res=atlasState.resolution){const map=new Map();for(const row of rows){const key=atlasKey(row,res);if(!map.has(key))map.set(key,{key,count:0,hex:res==='hue'?HUE_HEX[key]:colourHex(key,row.hex),rows:[]});const x=map.get(key);x.count++;x.rows.push(row)}return[...map.values()].sort((a,b)=>b.count-a.count)}
 function atlasEntropy(rows,res=atlasState.resolution){if(!rows.length)return 0;return-atlasDist(rows,res).reduce((s,x)=>{const p=x.count/rows.length;return s+p*Math.log2(p)},0)}
@@ -11,8 +11,119 @@ function atlasContextMetrics(){const rows=atlasRows(),base=rows.filter(r=>r.cont
 function atlasFamilyMetrics(contexts=atlasContextMetrics()){const rows=atlasRows(),base=rows.filter(r=>r.contextGroup==='baseline'),groups=[...new Set(atlasState.dataset.contexts.map(c=>c.group))];return groups.map((group,index)=>{const own=rows.filter(r=>r.contextGroup===group),dist=atlasDist(own),entropy=atlasEntropy(own);return{group,index,rows:own,n:own.length,dist,entropy,effective:2**entropy,distance:group==='baseline'?0:atlasTvd(own,base),dominance:own.length&&dist.length?dist[0].count/own.length:0,contexts:contexts.filter(x=>x.context.group===group),top:dist[0]}}).filter(x=>x.n)}
 function atlasConditionLabel(value){return atlasState.compareBy==='reasoning'?(value==='default'?'Model default':value+' effort'):value}
 function atlasConditionGroups(){const field=atlasState.compareBy==='reasoning'?'reasoningEffortRequested':'modelRequested',map=new Map();for(const row of atlasRows()){const key=row[field]||row.model||'unknown';if(!map.has(key))map.set(key,[]);map.get(key).push(row)}return[...map].map(([key,rows])=>({key,label:atlasConditionLabel(key),rows})).sort((a,b)=>a.label.localeCompare(b.label))}
-function atlasConditionMetrics(group){const base=group.rows.filter(r=>r.contextGroup==='baseline'),non=group.rows.filter(r=>r.contextGroup!=='baseline'),baseTop=atlasDist(base,'hue')[0],reasoning=group.rows.map(r=>r.usage?.output_tokens_details?.reasoning_tokens).filter(Number.isFinite),contextIds=new Set(group.rows.map(r=>r.contextId));return{...group,base,non,baseTop,baseRate:baseTop&&base.length?baseTop.count/base.length:0,distance:atlasTvd(non,base),effective:2**atlasEntropy(group.rows),runs:new Set(group.rows.map(r=>r.runId)).size,contexts:contextIds,reasoningMean:reasoning.length?reasoning.reduce((a,b)=>a+b,0)/reasoning.length:null}}
-function renderConditionComparison(){const groups=atlasConditionGroups().map(atlasConditionMetrics),empty=$('#atlas-compare-empty'),content=$('#atlas-comparison');if(groups.length<2){content.classList.add('hidden');empty.classList.remove('hidden');const dimension=atlasState.compareBy==='reasoning'?'reasoning-effort setting':'model';empty.innerHTML=`<b>One ${dimension} in view.</b><span>Choose “All” above and include runs with at least two ${dimension}s to unlock a direct comparison.</span>`;return}empty.classList.add('hidden');content.classList.remove('hidden');const shared=[...groups[0].contexts].filter(id=>groups.every(g=>g.contexts.has(id))),allRows=groups.flatMap(g=>g.rows),cols=atlasColumns(allRows);$('#condition-cards').innerHTML=groups.map(g=>`<article><span>${escapeHtml(atlasState.compareBy==='reasoning'?'REASONING SETTING':'MODEL')}</span><h3>${escapeHtml(g.label)}</h3><div><b>${g.rows.length.toLocaleString()}</b><small>answers · ${g.runs} run${g.runs===1?'':'s'}</small></div><div><b>${g.baseTop?escapeHtml(g.baseTop.key):'—'} ${g.baseTop?atlasPct(g.baseRate):''}</b><small>baseline favourite</small></div><div><b>${g.distance==null?'—':atlasPct(g.distance)}</b><small>context-to-baseline distance</small></div><footer>${g.reasoningMean==null?'Reasoning use unavailable':atlasNum(g.reasoningMean,0)+' mean reasoning tokens'}</footer></article>`).join('');const swatch=c=>c==='other labels'?'#aeb6bd':atlasState.resolution==='hue'?HUE_HEX[c]:colourHex(c);$('#condition-map').innerHTML=`<div class="condition-map-row header" style="--colour-columns:${cols.length}"><div>Condition</div>${cols.map(c=>`<span><i style="background:${swatch(c)}"></i>${escapeHtml(c)}</span>`).join('')}</div>${groups.map(g=>`<div class="condition-map-row" style="--colour-columns:${cols.length}"><strong>${escapeHtml(g.label)}<small>${g.rows.length} answers</small></strong>${cols.map(c=>atlasCell(g.rows,c,cols)).join('')}</div>`).join('')}`;const contexts=atlasState.dataset.contexts.map(context=>{const sets=groups.map(g=>g.rows.filter(r=>r.contextId===context.id));if(sets.some(rows=>!rows.length))return null;let total=0,pairs=0;for(let i=0;i<sets.length;i++)for(let j=i+1;j<sets.length;j++){const d=atlasTvd(sets[i],sets[j]);if(d!=null){total+=d;pairs++}}return{context,score:pairs?total/pairs:0,sets}}).filter(Boolean).sort((a,b)=>b.score-a.score).slice(0,10);$('#condition-divergence').innerHTML=`<div class="comparison-match-note"><b>${shared.length}</b> contexts shared across every condition</div>${contexts.map(x=>`<button class="divergence-row" data-comparison-context="${x.context.id}"><span>${escapeHtml(x.context.label)}<small>${escapeHtml(x.context.group)}</small></span><i><b style="width:${x.score*100}%"></b></i><em>${atlasPct(x.score)}</em><span class="divergence-swatches">${x.sets.map((rows,i)=>{const top=atlasDist(rows)[0];return`<i style="background:${top?.hex||'#d9dde1'}" title="${escapeHtml(groups[i].label)}: ${escapeHtml(top?.key||'none')}"></i>`}).join('')}</span></button>`).join('')}`;$$('[data-comparison-context]').forEach(row=>row.addEventListener('click',()=>openContextDrawer(row.dataset.comparisonContext)));$$('#condition-map [data-tip]').forEach(c=>{c.addEventListener('mouseenter',e=>atlasShowTooltip(e,c.dataset.tip));c.addEventListener('mousemove',atlasMoveTooltip);c.addEventListener('mouseleave',atlasHideTooltip)})}
+function atlasConditionMetrics(group){const base=group.rows.filter(r=>r.contextGroup==='baseline'),non=group.rows.filter(r=>r.contextGroup!=='baseline'),baseTop=atlasDist(base,'hue')[0],reasoning=group.rows.map(r=>r.usage?.output_tokens_details?.reasoning_tokens).filter(Number.isFinite),contextIds=new Set(group.rows.map(r=>r.contextId));return{...group,base,non,baseTop,baseRate:baseTop&&base.length?baseTop.count/base.length:0,distance:atlasMeanContextDistance(group.rows),effective:2**atlasEntropy(group.rows),runs:new Set(group.rows.map(r=>r.runId)).size,contexts:contextIds,reasoningMean:reasoning.length?reasoning.reduce((a,b)=>a+b,0)/reasoning.length:null}}
+function atlasMeanContextDistance(rows, family='all') {
+  const base = rows.filter(r => r.contextGroup === 'baseline');
+  if (!base.length) return null;
+  const ids = [...new Set(rows.filter(r => r.contextGroup !== 'baseline' && (family === 'all' || r.contextGroup === family)).map(r => r.contextId))];
+  const values = ids.map(id => atlasTvd(rows.filter(r => r.contextId === id), base)).filter(Number.isFinite);
+  return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+}
+function atlasConditionCellMetric(rows) {
+  const family = atlasState.matrixFamily;
+  const own = rows.filter(r => r.contextGroup !== 'baseline' && (family === 'all' || r.contextGroup === family));
+  const reasoning = own.map(r => r.usage?.output_tokens_details?.reasoning_tokens).filter(Number.isFinite);
+  const metrics = {
+    distance: atlasMeanContextDistance(rows, family),
+    diversity: own.length ? 2 ** atlasEntropy(own) : null,
+    vocabulary: own.length ? new Set(own.map(r => atlasKey(r, 'exact'))).size : null,
+    reasoning: reasoning.length ? reasoning.reduce((a, b) => a + b, 0) / reasoning.length : null,
+    observations: own.length || null
+  };
+  return { value: metrics[atlasState.matrixMetric], rows: own };
+}
+function renderConditionMatrix() {
+  const rows = atlasRows();
+  const models = [...new Set(rows.map(r => r.modelRequested || r.model || 'unknown'))].sort();
+  const efforts = [...new Set(rows.map(r => r.reasoningEffortRequested || 'default'))].sort();
+  const families = [...new Set(atlasState.dataset.contexts.map(c => c.group).filter(g => g !== 'baseline'))];
+  const familySelect = $('#matrix-family');
+  atlasState.matrixFamily = families.includes(atlasState.matrixFamily) ? atlasState.matrixFamily : 'all';
+  familySelect.innerHTML = `<option value="all">All non-baseline families</option>${families.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('')}`;
+  familySelect.value = atlasState.matrixFamily;
+  $('#matrix-metric').value = atlasState.matrixMetric;
+  const cells = [];
+  for (const model of models) for (const effort of efforts) {
+    const conditionRows = rows.filter(r => (r.modelRequested || r.model || 'unknown') === model && (r.reasoningEffortRequested || 'default') === effort);
+    cells.push({ model, effort, conditionRows, ...atlasConditionCellMetric(conditionRows) });
+  }
+  const available = cells.map(c => c.value).filter(Number.isFinite);
+  const max = atlasState.matrixMetric === 'distance' ? 1 : Math.max(...available, 1);
+  const format = value => {
+    if (!Number.isFinite(value)) return '—';
+    if (atlasState.matrixMetric === 'distance') return atlasPct(value);
+    if (atlasState.matrixMetric === 'diversity') return `${atlasNum(value)}×`;
+    if (atlasState.matrixMetric === 'reasoning') return `${atlasNum(value, 0)} tok`;
+    return Math.round(value).toLocaleString();
+  };
+  const label = { distance: 'mean context distance', diversity: `effective ${atlasState.resolution === 'exact' ? 'labels' : 'hues'}`, vocabulary: 'unique exact labels', reasoning: 'mean reasoning tokens', observations: 'non-baseline answers' }[atlasState.matrixMetric];
+  let html = `<div class="matrix-grid" style="--matrix-cols:${efforts.length}"><div class="matrix-corner">MODEL ↓ · EFFORT →</div>${efforts.map(e => `<div class="matrix-col">${escapeHtml(e === 'default' ? 'model default' : e)}</div>`).join('')}`;
+  for (const model of models) {
+    html += `<div class="matrix-row-label">${escapeHtml(model)}</div>`;
+    for (const effort of efforts) {
+      const cell = cells.find(c => c.model === model && c.effort === effort);
+      const strength = Number.isFinite(cell.value) ? Math.max(.08, cell.value / max) : 0;
+      const palette = atlasDist(cell.rows).slice(0, 6);
+      const strip = palette.length ? `<span class="matrix-palette">${palette.map(p => `<i style="width:${p.count / cell.rows.length * 100}%;background:${p.hex}"></i>`).join('')}</span>` : '';
+      html += `<div class="matrix-cell ${cell.conditionRows.length ? '' : 'missing'}" style="--matrix-strength:${strength}" title="${escapeHtml(model)} · ${escapeHtml(effort)} · ${escapeHtml(label)}"><strong>${format(cell.value)}</strong><small>${escapeHtml(label)} · n=${cell.rows.length.toLocaleString()}</small>${strip}</div>`;
+    }
+  }
+  $('#condition-matrix').innerHTML = html + '</div>';
+}
+function atlasFamilyColour(group) {
+  const colours = ['#ffd72e', '#ff8a38', '#ff5e7d', '#38d6c7', '#a8ef60', '#d5a7ff', '#76b9ff', '#f5b7df'];
+  const groups = [...new Set(atlasState.dataset.contexts.map(c => c.group).filter(g => g !== 'baseline'))];
+  return colours[Math.max(0, groups.indexOf(group)) % colours.length];
+}
+function renderConditionQuadrant(groups) {
+  const target = $('#condition-quadrant');
+  if (groups.length < 2) { target.innerHTML = '<div class="quadrant-empty">Two conditions are needed.</div>'; return; }
+  const [a, b] = [...groups].sort((x, y) => y.rows.length - x.rows.length).slice(0, 2);
+  const baseA = a.rows.filter(r => r.contextGroup === 'baseline'), baseB = b.rows.filter(r => r.contextGroup === 'baseline');
+  const data = atlasState.dataset.contexts.filter(c => c.group !== 'baseline').map(context => {
+    const rowsA = a.rows.filter(r => r.contextId === context.id), rowsB = b.rows.filter(r => r.contextId === context.id);
+    if (!rowsA.length || !rowsB.length || !baseA.length || !baseB.length) return null;
+    return { context, dx: atlasTvd(rowsB, baseB) - atlasTvd(rowsA, baseA), dy: 2 ** atlasEntropy(rowsB) - 2 ** atlasEntropy(rowsA), disagreement: atlasTvd(rowsA, rowsB) || 0 };
+  }).filter(Boolean);
+  if (!data.length) { target.innerHTML = '<div class="quadrant-empty">No matched non-baseline contexts with controls.</div>'; return; }
+  const W = 650, H = 390, m = { l: 55, r: 22, t: 38, b: 48 }, pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const maxX = Math.max(.1, ...data.map(d => Math.abs(d.dx))) * 1.08, maxY = Math.max(1, ...data.map(d => Math.abs(d.dy))) * 1.08;
+  const x = v => m.l + (v + maxX) / (2 * maxX) * pw, y = v => m.t + (maxY - v) / (2 * maxY) * ph;
+  const important = [...data].sort((u, v) => v.disagreement - u.disagreement).slice(0, 6);
+  const marks = data.map(d => {
+    const cx = x(d.dx), cy = y(d.dy), r = 4 + Math.sqrt(d.disagreement) * 10;
+    const title = `${d.context.label} · distance ${d.dx >= 0 ? '+' : ''}${Math.round(d.dx * 100)} points · diversity ${d.dy >= 0 ? '+' : ''}${atlasNum(d.dy)}`;
+    return `<circle class="condition-dot" data-quadrant-context="${d.context.id}" cx="${cx}" cy="${cy}" r="${r}" fill="${atlasFamilyColour(d.context.group)}"><title>${escapeHtml(title)}</title></circle>${important.includes(d) ? `<text class="condition-dot-label" x="${cx + r + 4}" y="${cy - r - 2}">${escapeHtml(d.context.label)}</text>` : ''}`;
+  }).join('');
+  target.innerHTML = `<div class="quadrant-condition-key"><b>A</b>${escapeHtml(a.label)}<span>→</span><b>B</b>${escapeHtml(b.label)}</div><svg viewBox="0 0 ${W} ${H}"><rect class="condition-quadrant-bg" x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/><line class="condition-axis" x1="${x(0)}" y1="${m.t}" x2="${x(0)}" y2="${m.t + ph}"/><line class="condition-axis" x1="${m.l}" y1="${y(0)}" x2="${m.l + pw}" y2="${y(0)}"/><text class="condition-zone" x="${m.l + 10}" y="${m.t + 18}">B: MORE DIVERSE · CLOSER TO BASELINE</text><text class="condition-zone" x="${m.l + pw - 10}" y="${m.t + 18}" text-anchor="end">B: MORE DIVERSE · FURTHER OUT</text><text class="condition-zone" x="${m.l + 10}" y="${m.t + ph - 10}">B: MORE CONSISTENT · CLOSER</text><text class="condition-zone" x="${m.l + pw - 10}" y="${m.t + ph - 10}" text-anchor="end">B: MORE CONSISTENT · FURTHER OUT</text>${marks}<text class="condition-axis-label" x="${m.l + pw / 2}" y="${H - 8}" text-anchor="middle">CHANGE IN DISTANCE FROM BASELINE (B − A) →</text><text class="condition-axis-label" transform="translate(13 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">CHANGE IN DIVERSITY (B − A) →</text></svg>`;
+  $('[data-quadrant-context]').forEach(dot => dot.addEventListener('click', () => openContextDrawer(dot.dataset.quadrantContext)));
+}
+function renderConditionComparison() {
+  const groups = atlasConditionGroups().map(atlasConditionMetrics), empty = $('#atlas-compare-empty'), content = $('#atlas-comparison');
+  if (groups.length < 2) {
+    content.classList.add('hidden'); empty.classList.remove('hidden');
+    const dimension = atlasState.compareBy === 'reasoning' ? 'reasoning-effort setting' : 'model';
+    empty.innerHTML = `<b>One ${dimension} in view.</b><span>Choose “All” above and include runs with at least two ${dimension}s to unlock a direct comparison.</span>`;
+    return;
+  }
+  empty.classList.add('hidden'); content.classList.remove('hidden');
+  const shared = [...groups[0].contexts].filter(id => groups.every(g => g.contexts.has(id))), allRows = groups.flatMap(g => g.rows), cols = atlasColumns(allRows);
+  $('#condition-cards').innerHTML = groups.map(g => `<article><span>${escapeHtml(atlasState.compareBy === 'reasoning' ? 'REASONING SETTING' : 'MODEL')}</span><h3>${escapeHtml(g.label)}</h3><div><b>${g.rows.length.toLocaleString()}</b><small>answers · ${g.runs} run${g.runs === 1 ? '' : 's'}</small></div><div><b>${g.baseTop ? escapeHtml(g.baseTop.key) : '—'} ${g.baseTop ? atlasPct(g.baseRate) : ''}</b><small>baseline favourite</small></div><div><b>${g.distance == null ? '—' : atlasPct(g.distance)}</b><small>mean context-to-baseline distance</small></div><footer>${g.reasoningMean == null ? 'Reasoning use unavailable' : atlasNum(g.reasoningMean, 0) + ' mean reasoning tokens'}</footer></article>`).join('');
+  renderConditionMatrix();
+  const swatch = c => c === 'other labels' ? '#aeb6bd' : atlasState.resolution === 'hue' ? HUE_HEX[c] : colourHex(c);
+  $('#condition-map').innerHTML = `<div class="condition-map-row header" style="--colour-columns:${cols.length}"><div>Condition</div>${cols.map(c => `<span><i style="background:${swatch(c)}"></i>${escapeHtml(c)}</span>`).join('')}</div>${groups.map(g => `<div class="condition-map-row" style="--colour-columns:${cols.length}"><strong>${escapeHtml(g.label)}<small>${g.rows.length} answers</small></strong>${cols.map(c => atlasCell(g.rows, c, cols)).join('')}</div>`).join('')}`;
+  const contexts = atlasState.dataset.contexts.filter(context => context.group !== 'baseline').map(context => {
+    const sets = groups.map(g => g.rows.filter(r => r.contextId === context.id));
+    if (sets.some(rows => !rows.length)) return null;
+    let total = 0, pairs = 0;
+    for (let i = 0; i < sets.length; i++) for (let j = i + 1; j < sets.length; j++) { const d = atlasTvd(sets[i], sets[j]); if (d != null) { total += d; pairs++; } }
+    return { context, score: pairs ? total / pairs : 0, sets };
+  }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, 10);
+  $('#condition-divergence').innerHTML = `<div class="comparison-match-note"><b>${shared.length}</b> contexts shared across every condition</div>${contexts.map(x => `<button class="divergence-row" data-comparison-context="${x.context.id}"><span>${escapeHtml(x.context.label)}<small>${escapeHtml(x.context.group)}</small></span><i><b style="width:${x.score * 100}%"></b></i><em>${atlasPct(x.score)}</em><span class="divergence-swatches">${x.sets.map((rows, i) => { const top = atlasDist(rows)[0]; return `<i style="background:${top?.hex || '#d9dde1'}" title="${escapeHtml(groups[i].label)}: ${escapeHtml(top?.key || 'none')}"></i>`; }).join('')}</span></button>`).join('')}`;
+  renderConditionQuadrant(groups);
+  $('[data-comparison-context]').forEach(row => row.addEventListener('click', () => openContextDrawer(row.dataset.comparisonContext)));
+  $('#condition-map [data-tip]').forEach(c => { c.addEventListener('mouseenter', e => atlasShowTooltip(e, c.dataset.tip)); c.addEventListener('mousemove', atlasMoveTooltip); c.addEventListener('mouseleave', atlasHideTooltip); });
+}
 const atlasPct=v=>`${Math.round(v*100)}%`,atlasNum=(v,d=1)=>Number(v||0).toFixed(d);
 function atlasHash(t){let h=2166136261;for(const c of String(t)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 function atlasRgba(hex,a){return/^#[0-9a-f]{6}$/i.test(hex||'')?`rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`:`rgba(190,197,203,${a})`}
@@ -37,5 +148,24 @@ function atlasHideTooltip(){$('#atlas-tooltip').classList.add('hidden')}
 function renderAtlas(){const rows=atlasRows();$('#atlas-coverage-value').textContent=rows.length.toLocaleString();$('#atlas-coverage-label').textContent=`successful observations · ${atlasState.payload.runs.length} run${atlasState.payload.runs.length===1?'':'s'}`;$('#atlas-empty').classList.toggle('hidden',!!rows.length);$('#atlas-content').classList.toggle('hidden',!rows.length);if(!rows.length)return;const contexts=atlasContextMetrics(),families=atlasFamilyMetrics(contexts);if(!atlasState.expanded.size){const top=[...families].filter(x=>x.group!=='baseline').sort((a,b)=>b.effective-a.effective)[0];if(top)atlasState.expanded.add(top.group)}renderAtlasHero(contexts,families);renderConditionComparison();renderAtlasFindings(contexts,families);renderAtlasHeatmap(contexts,families);renderInfluenceScatter(contexts);renderFamilyDiversity(families);renderConsistency(contexts);renderPerceptualField()}
 async function loadAtlas(){const runId=$('#atlas-run').value;if(!runId)return;$('#atlas-coverage-value').textContent='···';try{atlasState.payload=await api(`/api/analytics?runId=${encodeURIComponent(runId)}&scope=${atlasState.scope}&model=${encodeURIComponent(atlasState.model)}&reasoningEffort=${encodeURIComponent(atlasState.reasoning)}`);const modelSelect=$('#atlas-model'),models=atlasState.payload.models,chosenModel=atlasState.model;modelSelect.innerHTML=`<option value="all">All compatible models</option>${models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}`;atlasState.model=models.includes(chosenModel)?chosenModel:'all';modelSelect.value=atlasState.model;const effortSelect=$('#atlas-reasoning'),efforts=atlasState.payload.reasoningEfforts||[],chosenEffort=atlasState.reasoning;effortSelect.innerHTML=`<option value="all">All effort settings</option>${efforts.map(e=>`<option value="${escapeHtml(e)}">${escapeHtml(e==='default'?'Model default':e)}</option>`).join('')}`;atlasState.reasoning=efforts.includes(chosenEffort)?chosenEffort:'all';effortSelect.value=atlasState.reasoning;renderAtlas()}catch(error){toast(error.message,true)}}
 async function initialiseAtlas(){const previous=$('#atlas-run').value;$('#atlas-coverage-value').textContent='···';try{if(!atlasState.dataset)atlasState.dataset=await api('/api/contexts');atlasState.runs=await api('/api/runs');const usable=atlasState.runs.filter(r=>r.succeeded>0),selected=usable.some(r=>r.id===previous)?previous:usable[0]?.id;$('#atlas-run').innerHTML=usable.length?usable.map(r=>`<option value="${r.id}">${new Date(r.createdAt).toLocaleString()} · ${escapeHtml(r.settings.model)} · ${escapeHtml(r.settings.reasoningEffort||'default')} effort · ${r.succeeded} answers</option>`).join(''):'<option value="">No successful runs yet</option>';if(selected)$('#atlas-run').value=selected;atlasState.loaded=true;if(usable.length)await loadAtlas();else{$('#atlas-empty').classList.remove('hidden');$('#atlas-content').classList.add('hidden');$('#atlas-coverage-value').textContent='0'}toast('Colour Atlas data refreshed.')}catch(error){toast(`Could not refresh the atlas: ${error.message}`,true)}}
-function bindAtlasEvents(){const nav=$('.nav-link[data-view="analytics"]');nav.addEventListener('click',initialiseAtlas);$('#atlas-refresh').addEventListener('click',initialiseAtlas);$('#atlas-run').addEventListener('change',()=>{atlasState.model='all';atlasState.reasoning='all';atlasState.expanded.clear();loadAtlas()});$$('[data-atlas-scope]').forEach(b=>b.addEventListener('click',()=>{atlasState.scope=b.dataset.atlasScope;$$('[data-atlas-scope]').forEach(x=>x.classList.toggle('active',x===b));atlasState.model='all';atlasState.reasoning='all';atlasState.expanded.clear();loadAtlas()}));$('#atlas-model').addEventListener('change',e=>{atlasState.model=e.target.value;atlasState.expanded.clear();loadAtlas()});$('#atlas-reasoning').addEventListener('change',e=>{atlasState.reasoning=e.target.value;atlasState.expanded.clear();loadAtlas()});$$('[data-compare]').forEach(b=>b.addEventListener('click',()=>{atlasState.compareBy=b.dataset.compare;$$('[data-compare]').forEach(x=>x.classList.toggle('active',x===b));renderConditionComparison()}));$$('[data-resolution]').forEach(b=>b.addEventListener('click',()=>{atlasState.resolution=b.dataset.resolution;$$('[data-resolution]').forEach(x=>x.classList.toggle('active',x===b));atlasState.expanded.clear();renderAtlas()}));$('#atlas-sort').addEventListener('change',e=>{atlasState.sort=e.target.value;renderAtlasHeatmap(atlasContextMetrics(),atlasFamilyMetrics())});$$('[data-map-mode]').forEach(b=>b.addEventListener('click',()=>{atlasState.mapMode=b.dataset.mapMode;$$('[data-map-mode]').forEach(x=>x.classList.toggle('active',x===b));renderAtlasHeatmap(atlasContextMetrics(),atlasFamilyMetrics());renderConditionComparison()}));$$('[data-field]').forEach(b=>b.addEventListener('click',()=>{atlasState.fieldMode=b.dataset.field;$$('[data-field]').forEach(x=>x.classList.toggle('active',x===b));renderPerceptualField()}));$('#drawer-close').addEventListener('click',closeContextDrawer);$('#context-drawer-backdrop').addEventListener('click',closeContextDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeContextDrawer()});$('#atlas-show-baseline').addEventListener('click',()=>$('#influence-scatter').scrollIntoView({behavior:'smooth',block:'center'}))}
+function bindAtlasEvents() {
+  const nav = $('.nav-link[data-view="analytics"]');
+  nav.addEventListener('click', initialiseAtlas);
+  $('#atlas-refresh').addEventListener('click', initialiseAtlas);
+  $('#atlas-run').addEventListener('change', () => { atlasState.model = 'all'; atlasState.reasoning = 'all'; atlasState.expanded.clear(); loadAtlas(); });
+  $('[data-atlas-scope]').forEach(b => b.addEventListener('click', () => { atlasState.scope = b.dataset.atlasScope; $('[data-atlas-scope]').forEach(x => x.classList.toggle('active', x === b)); atlasState.model = 'all'; atlasState.reasoning = 'all'; atlasState.expanded.clear(); loadAtlas(); }));
+  $('#atlas-model').addEventListener('change', e => { atlasState.model = e.target.value; atlasState.expanded.clear(); loadAtlas(); });
+  $('#atlas-reasoning').addEventListener('change', e => { atlasState.reasoning = e.target.value; atlasState.expanded.clear(); loadAtlas(); });
+  $('[data-compare]').forEach(b => b.addEventListener('click', () => { atlasState.compareBy = b.dataset.compare; $('[data-compare]').forEach(x => x.classList.toggle('active', x === b)); renderConditionComparison(); }));
+  $('#matrix-metric').addEventListener('change', e => { atlasState.matrixMetric = e.target.value; renderConditionComparison(); });
+  $('#matrix-family').addEventListener('change', e => { atlasState.matrixFamily = e.target.value; renderConditionComparison(); });
+  $('[data-resolution]').forEach(b => b.addEventListener('click', () => { atlasState.resolution = b.dataset.resolution; $('[data-resolution]').forEach(x => x.classList.toggle('active', x === b)); atlasState.expanded.clear(); renderAtlas(); }));
+  $('#atlas-sort').addEventListener('change', e => { atlasState.sort = e.target.value; renderAtlasHeatmap(atlasContextMetrics(), atlasFamilyMetrics()); });
+  $('[data-map-mode]').forEach(b => b.addEventListener('click', () => { atlasState.mapMode = b.dataset.mapMode; $('[data-map-mode]').forEach(x => x.classList.toggle('active', x === b)); renderAtlasHeatmap(atlasContextMetrics(), atlasFamilyMetrics()); renderConditionComparison(); }));
+  $('[data-field]').forEach(b => b.addEventListener('click', () => { atlasState.fieldMode = b.dataset.field; $('[data-field]').forEach(x => x.classList.toggle('active', x === b)); renderPerceptualField(); }));
+  $('#drawer-close').addEventListener('click', closeContextDrawer);
+  $('#context-drawer-backdrop').addEventListener('click', closeContextDrawer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeContextDrawer(); });
+  $('#atlas-show-baseline').addEventListener('click', () => $('#influence-scatter').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+}
 bindAtlasEvents();

@@ -218,7 +218,18 @@
         <section class="atlas-section comparison-section">
           <div class="atlas-section-head atlas-head-split"><div><span>01 · CONDITION COMPARISON</span><h2>Same question. Different machinery.</h2><p>Compare models or requested reasoning settings on matched contexts. Every mark uses the same scale.</p></div><div class="atlas-control atlas-compare-control"><span>Compare by</span><div class="atlas-segments compact" id="atlas-compare-mode"><button class="active" data-compare="model">Model</button><button data-compare="reasoning">Reasoning</button></div></div></div>
           <div id="atlas-compare-empty" class="comparison-empty"></div>
-          <div id="atlas-comparison" class="hidden"><div id="condition-cards" class="condition-cards"></div><div class="comparison-grid"><div><h3>Colour signatures</h3><p>Overall answer distribution for each condition.</p><div class="atlas-heatmap-wrap"><div id="condition-map" class="condition-map"></div></div></div><div><h3>Where conditions part company</h3><p>Contexts ranked by average distributional disagreement.</p><div id="condition-divergence" class="condition-divergence"></div></div></div></div>
+          <div id="atlas-comparison" class="hidden">
+            <div id="condition-cards" class="condition-cards"></div>
+            <div class="comparison-matrix-panel">
+              <div class="comparison-subhead"><div><h3>Model × reasoning matrix</h3><p>Every available condition, cross-tabulated on one comparable measure.</p></div><div class="matrix-controls"><label><span>Measure</span><select id="matrix-metric"><option value="distance">Mean baseline distance</option><option value="diversity">Effective colours</option><option value="vocabulary">Exact vocabulary</option><option value="reasoning">Mean reasoning tokens</option><option value="observations">Observations</option></select></label><label><span>Context family</span><select id="matrix-family"><option value="all">All non-baseline families</option></select></label></div></div>
+              <div id="condition-matrix" class="condition-matrix"></div>
+            </div>
+            <div class="comparison-signature-panel"><h3>Colour signatures</h3><p>Overall answer distribution for each condition. Switch between exact labels and broad hues above.</p><div class="atlas-heatmap-wrap"><div id="condition-map" class="condition-map"></div></div></div>
+            <div class="comparison-lower-grid">
+              <div><h3>Where conditions part company</h3><p>Contexts ranked by distributional disagreement.</p><div id="condition-divergence" class="condition-divergence"></div></div>
+              <div><h3>The condition shift field</h3><p>Each context moves from condition A to B: baseline distance across, diversity up, disagreement in dot size.</p><div id="condition-quadrant" class="condition-quadrant"></div></div>
+            </div>
+          </div>
         </section>
 
         <section class="atlas-section findings-section">
