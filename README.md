@@ -69,13 +69,14 @@ Contexts, hypotheses, expected directions and tags live in [`data/contexts.json`
 The Colour Atlas analyses one run or pools every run using the same exact question. Its linked views include:
 
 - Automatically generated, evidence-backed findings
-- A family-to-context colour heat map
+- A family-to-context colour map with glow, proportional-bar and proportional-dot modes
 - Broad-hue and exact-label analysis modes
 - Baseline-distance versus diversity scatterplots
 - Effective-colour family rankings
 - A context consistency ladder
 - A perceptual Lab colour field with dot and density views
-- Run and model filtering
+- Run, model and requested-reasoning filtering
+- Direct model or reasoning-setting comparisons with matched-context divergence rankings
 - A context microscope containing the full prompt, hypothesis, exact colour distribution, broad hues and run-to-run trace
 
 Opening the Atlas automatically refreshes its data without reloading the browser or clearing the API key field.
@@ -142,7 +143,7 @@ Each run creates two local files:
 
 ```text
 data/results/<run-id>.json     Run settings and progress metadata
-data/results/<run-id>.jsonl    One self-contained observation per line
+data/results/<run-id>.jsonl    One self-contained observation per line, including requested model and reasoning effort
 ```
 
 JSONL is appended after every completed request, so observations already collected survive interruption. Result files are deliberately excluded by [`.gitignore`](.gitignore); the repository tracks the experiment design and contexts, not private API outputs.
@@ -186,7 +187,6 @@ The surprising part is not that a model can associate snow with white or urgency
 The data-first structure is designed for extension. Possible next steps include:
 
 - Alternative context datasets or languages
-- Comparisons between models and snapshots
 - Multiple phrasings of the same question
 - Temperature or sampling experiments where supported
 - Formal confidence intervals and resampling tests

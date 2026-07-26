@@ -137,6 +137,8 @@ async function callOpenAI({ apiKey, model, reasoningEffort, context, question, s
 
   return {
     responseId: payload.id,
+    modelReturned: payload.model || model,
+    reasoningEffortReturned: payload.reasoning?.effort || payload.reasoning_effort || null,
     colour: String(answer.colour || '').trim(),
     hex: /^#[0-9a-f]{6}$/i.test(answer.hex || '') ? answer.hex.toUpperCase() : null,
     raw,
@@ -200,13 +202,15 @@ async function executeRun(run, secret) {
           signal: controller.signal
         });
         row = {
-          schemaVersion: 1,
+          schemaVersion: 2,
           runId: run.id,
           observationId: crypto.randomUUID(),
           recordedAt: new Date().toISOString(),
           requestOrder: jobIndex + 1,
           iteration: job.iteration,
           model: run.settings.model,
+          modelRequested: run.settings.model,
+          reasoningEffortRequested: run.settings.reasoningEffort,
           contextId: job.context.id,
           contextGroup: job.context.group,
           influence: job.context.influence,
@@ -219,13 +223,15 @@ async function executeRun(run, secret) {
         run.succeeded++;
       } catch (error) {
         row = {
-          schemaVersion: 1,
+          schemaVersion: 2,
           runId: run.id,
           observationId: crypto.randomUUID(),
           recordedAt: new Date().toISOString(),
           requestOrder: jobIndex + 1,
           iteration: job.iteration,
           model: run.settings.model,
+          modelRequested: run.settings.model,
+          reasoningEffortRequested: run.settings.reasoningEffort,
           contextId: job.context.id,
           contextGroup: job.context.group,
           influence: job.context.influence,
@@ -292,29 +298,40 @@ async function handleApi(req, res, url) {
     const runId = String(url.searchParams.get('runId') || '');
     const scope = url.searchParams.get('scope') === 'question' ? 'question' : 'run';
     const model = String(url.searchParams.get('model') || 'all');
+    const reasoningEffort = String(url.searchParams.get('reasoningEffort') || 'all');
     if (!/^[a-f0-9-]+$/i.test(runId)) return sendJson(res, 400, { error: 'Select a valid source run.' });
     const persisted = listRuns();
     const live = [...activeRuns.values()].map(publicRun);
     const allRuns = [...live, ...persisted.filter(item => !activeRuns.has(item.id))];
     const source = allRuns.find(item => item.id === runId);
     if (!source) return sendJson(res, 404, { error: 'Source run not found.' });
-    let selectedRuns = scope === 'question'
+    const compatibleRuns = (scope === 'question'
       ? allRuns.filter(item => item.settings?.question === source.settings?.question)
-      : [source];
+      : [source]).filter(item => item.succeeded > 0);
+    let selectedRuns = [...compatibleRuns];
     if (model !== 'all') selectedRuns = selectedRuns.filter(item => item.settings?.model === model);
+    if (reasoningEffort !== 'all') selectedRuns = selectedRuns.filter(item => (item.settings?.reasoningEffort || 'default') === reasoningEffort);
     const observations = [];
     for (const run of selectedRuns) {
       const target = runPaths(run.id).rows;
       if (!fs.existsSync(target)) continue;
       for (const line of fs.readFileSync(target, 'utf8').split(/\r?\n/).filter(Boolean)) {
-        try { observations.push(JSON.parse(line)); } catch { /* Preserve access to all other valid rows. */ }
+        try {
+          const row = JSON.parse(line);
+          observations.push({
+            ...row,
+            modelRequested: row.modelRequested || row.model || run.settings?.model,
+            reasoningEffortRequested: row.reasoningEffortRequested || run.settings?.reasoningEffort || 'default'
+          });
+        } catch { /* Preserve access to all other valid rows. */ }
       }
     }
     return sendJson(res, 200, {
       sourceRunId: source.id,
       scope,
       question: source.settings?.question,
-      models: [...new Set((scope === 'question' ? allRuns.filter(item => item.settings?.question === source.settings?.question) : [source]).map(item => item.settings?.model))].sort(),
+      models: [...new Set(compatibleRuns.map(item => item.settings?.model).filter(Boolean))].sort(),
+      reasoningEfforts: [...new Set(compatibleRuns.map(item => item.settings?.reasoningEffort || 'default'))].sort(),
       runs: selectedRuns,
       observations
     });
@@ -324,7 +341,7 @@ async function handleApi(req, res, url) {
       const id = crypto.randomUUID();
       const now = new Date().toISOString();
       const run = {
-        schemaVersion: 1,
+        schemaVersion: 2,
         id,
         status: 'running',
         createdAt: now,
