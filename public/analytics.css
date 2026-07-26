@@ -1,4 +1,4 @@
-﻿/* Colour Atlas — deep analytics */
+/* Colour Atlas — deep analytics */
 .atlas-page-head { padding: 64px 0 38px; display: grid; grid-template-columns: 1fr 270px; gap: 50px; align-items: end; }
 .atlas-page-head h1 { margin: 0; font-size: clamp(52px,7vw,92px); line-height: .92; letter-spacing: -.07em; }
 .atlas-page-head > div:first-child > p:last-child { max-width: 760px; margin: 24px 0 0; color: var(--muted); font-size: 16px; line-height: 1.65; }
@@ -21,6 +21,8 @@
 .atlas-coverage > span { width: 7px; height: 7px; background: var(--green); border-radius: 50%; }
 .atlas-coverage b { font-size: 17px; line-height: 1; }
 .atlas-coverage small { font-size: 7px; color: var(--muted); white-space: nowrap; }
+.atlas-coverage button { border: 0; padding: 2px 5px; background: transparent; color: var(--blue); font: 500 8px "DM Mono"; }
+.atlas-coverage button:hover { text-decoration: underline; }
 .atlas-empty { margin-top: 80px; }
 
 .atlas-hero-story { min-height: 390px; margin-top: 18px; display: grid; grid-template-columns: .82fr 1.18fr; background: var(--blue); color: white; overflow: hidden; }
