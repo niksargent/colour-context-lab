@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/analytics.css">
 </head>
 <body>
   <header class="topbar">
@@ -20,6 +21,7 @@
       <button class="nav-link active" data-view="experiment">Experiment</button>
       <button class="nav-link" data-view="contexts">Contexts <span id="context-count-pill">45</span></button>
       <button class="nav-link" data-view="results">Results</button>
+      <button class="nav-link" data-view="analytics">Colour atlas</button>
     </nav>
     <div class="top-actions">
       <span class="privacy-note"><span class="status-dot"></span> Local &amp; private</span>
@@ -179,7 +181,86 @@
         </div>
       </div>
     </section>
-  </main>
+    <section class="view" id="view-analytics">
+      <div class="atlas-page-head">
+        <div>
+          <p class="eyebrow">DEEP ANALYSIS · COLOUR ATLAS</p>
+          <h1>The hidden spectrum.</h1>
+          <p>Trace how a simple question fractures into a landscape of associations—then follow any pattern all the way down to the exact context that produced it.</p>
+        </div>
+        <div class="atlas-orbit-mark" aria-hidden="true"><i></i><i></i><i></i><span>CONTEXT<br>LEAVES A<br>COLOUR TRACE</span></div>
+      </div>
+
+      <section class="atlas-scope" aria-label="Analytics scope">
+        <label><span>Starting run</span><select id="atlas-run"><option value="">Choose a run</option></select></label>
+        <div class="atlas-control"><span>Use data from</span><div class="atlas-segments" id="atlas-scope-mode"><button data-atlas-scope="run">This run</button><button class="active" data-atlas-scope="question">All with this question</button></div></div>
+        <label><span>Model</span><select id="atlas-model"><option value="all">All compatible models</option></select></label>
+        <div class="atlas-control"><span>Colour definition</span><div class="atlas-segments" id="atlas-resolution"><button class="active" data-resolution="hue">Broad hue</button><button data-resolution="exact">Exact label</button></div></div>
+        <div class="atlas-coverage"><span id="atlas-live-dot"></span><b id="atlas-coverage-value">—</b><small id="atlas-coverage-label">observations in view</small></div>
+      </section>
+
+      <div id="atlas-empty" class="empty-state atlas-empty"><div class="empty-swatch"><i></i><i></i><i></i></div><h2>Your atlas is waiting</h2><p>Complete a run, then return here to explore its colour landscape.</p><button data-go="experiment">Set up experiment</button></div>
+
+      <div id="atlas-content" class="hidden">
+        <section class="atlas-hero-story">
+          <div class="atlas-story-copy"><p class="eyebrow">THE CONTEXT EFFECT</p><h2 id="atlas-hero-title">Context breaks the baseline.</h2><p id="atlas-hero-copy"></p><button class="atlas-inline-action" id="atlas-show-baseline">Compare baseline and context →</button></div>
+          <div class="atlas-gravity" id="atlas-gravity" role="img" aria-label="Observed colours radiating away from the baseline"></div>
+        </section>
+
+        <div class="atlas-metrics">
+          <article><span>Baseline concentration</span><strong id="atlas-baseline-rate">—</strong><small id="atlas-baseline-note"></small></article>
+          <article><span>Non-baseline shift</span><strong id="atlas-shift-rate">—</strong><small>answers outside the baseline hue</small></article>
+          <article><span>Most diverse family</span><strong id="atlas-diverse-family">—</strong><small id="atlas-diverse-note"></small></article>
+          <article><span>Strongest consistent shift</span><strong id="atlas-strong-context">—</strong><small id="atlas-strong-note"></small></article>
+        </div>
+
+        <section class="atlas-section findings-section">
+          <div class="atlas-section-head"><div><span>01 · WHAT THE MODEL REVEALED</span><h2>Findings worth following</h2><p>Computed directly from the selected evidence. Select a finding to reveal its source.</p></div></div>
+          <div class="findings-grid" id="atlas-findings"></div>
+        </section>
+
+        <section class="atlas-section colour-atlas-section">
+          <div class="atlas-section-head atlas-head-split"><div><span>02 · CONTEXT × COLOUR</span><h2>The Context Colour Atlas</h2><p>Every row is a distribution. Families are summaries; expand them to expose individual contexts.</p></div><label class="atlas-mini-select"><span>Order contexts by</span><select id="atlas-sort"><option value="dataset">Dataset order</option><option value="shift">Distance from baseline</option><option value="diversity">Diversity</option><option value="consistency">Consistency</option></select></label></div>
+          <div class="atlas-heatmap-wrap"><div id="atlas-heatmap" class="atlas-heatmap"></div></div>
+          <div class="atlas-scale"><span>Less frequent</span><i></i><i></i><i></i><i></i><i></i><span>More frequent</span><small>Click any context row to open the microscope</small></div>
+        </section>
+
+        <div class="atlas-two-col">
+          <section class="atlas-section">
+            <div class="atlas-section-head"><div><span>03 · INFLUENCE LANDSCAPE</span><h2>Shift versus unpredictability</h2><p>Right means further from baseline. Higher means more varied answers.</p></div></div>
+            <div id="influence-scatter" class="atlas-chart" role="img" aria-label="Contexts plotted by distance from baseline and colour diversity"></div>
+            <div class="quadrant-key"><span><b>Stable shifters</b> decisive context effects</span><span><b>Chaotic shifters</b> strong but unpredictable</span></div>
+          </section>
+          <section class="atlas-section">
+            <div class="atlas-section-head"><div><span>04 · FAMILY DIVERSITY</span><h2>How many colours live here?</h2><p>Effective colour count converts entropy into an intuitive number of equally likely choices.</p></div></div>
+            <div id="family-diversity" class="family-diversity"></div>
+          </section>
+        </div>
+
+        <div class="atlas-two-col atlas-lower-grid">
+          <section class="atlas-section">
+            <div class="atlas-section-head"><div><span>05 · CONSISTENCY LADDER</span><h2>Does it answer the same way?</h2><p>Contexts ranked from most variable to most consistent.</p></div></div>
+            <div id="consistency-ladder" class="consistency-ladder"></div>
+          </section>
+          <section class="atlas-section perceptual-section">
+            <div class="atlas-section-head atlas-head-split"><div><span>06 · PERCEPTUAL FIELD</span><h2>Where colours cluster</h2><p>Each mark is an answer positioned in perceptual Lab colour space.</p></div><div class="atlas-segments compact" id="field-mode"><button class="active" data-field="dots">Dots</button><button data-field="density">Density</button></div></div>
+            <div id="perceptual-field" class="atlas-chart perceptual-field" role="img" aria-label="Observed colours arranged in perceptual colour space"></div>
+          </section>
+        </div>
+
+        <section class="atlas-method">
+          <b>How to read this atlas</b><p>Exact-label diversity treats “blue” and “midnight blue” separately. Broad-hue diversity groups perceptually related answers. Distance is total variation from the selected baseline distribution. Findings describe this model under these prompts—not people, cultures, or universal colour preferences.</p>
+        </section>
+      </div>
+    </section>
+
+    <div class="context-drawer-backdrop hidden" id="context-drawer-backdrop"></div>
+    <aside class="context-drawer" id="context-drawer" aria-hidden="true" aria-label="Context microscope">
+      <button class="drawer-close" id="drawer-close" aria-label="Close context microscope">×</button>
+      <p class="eyebrow">CONTEXT MICROSCOPE</p>
+      <div id="drawer-content"></div>
+    </aside>
+    <div class="atlas-tooltip hidden" id="atlas-tooltip"></div>  </main>
 
   <dialog id="about-dialog">
     <button class="dialog-close" aria-label="Close">×</button>
@@ -189,5 +270,6 @@
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="/app.js" defer></script>
+  <script src="/analytics.js" defer></script>
 </body>
 </html>

@@ -288,7 +288,37 @@ async function handleApi(req, res, url) {
       : [];
     return sendJson(res, 200, { meta, observations });
   }
-  if (req.method === 'POST' && url.pathname === '/api/runs') {
+  if (req.method === 'GET' && url.pathname === '/api/analytics') {
+    const runId = String(url.searchParams.get('runId') || '');
+    const scope = url.searchParams.get('scope') === 'question' ? 'question' : 'run';
+    const model = String(url.searchParams.get('model') || 'all');
+    if (!/^[a-f0-9-]+$/i.test(runId)) return sendJson(res, 400, { error: 'Select a valid source run.' });
+    const persisted = listRuns();
+    const live = [...activeRuns.values()].map(publicRun);
+    const allRuns = [...live, ...persisted.filter(item => !activeRuns.has(item.id))];
+    const source = allRuns.find(item => item.id === runId);
+    if (!source) return sendJson(res, 404, { error: 'Source run not found.' });
+    let selectedRuns = scope === 'question'
+      ? allRuns.filter(item => item.settings?.question === source.settings?.question)
+      : [source];
+    if (model !== 'all') selectedRuns = selectedRuns.filter(item => item.settings?.model === model);
+    const observations = [];
+    for (const run of selectedRuns) {
+      const target = runPaths(run.id).rows;
+      if (!fs.existsSync(target)) continue;
+      for (const line of fs.readFileSync(target, 'utf8').split(/\r?\n/).filter(Boolean)) {
+        try { observations.push(JSON.parse(line)); } catch { /* Preserve access to all other valid rows. */ }
+      }
+    }
+    return sendJson(res, 200, {
+      sourceRunId: source.id,
+      scope,
+      question: source.settings?.question,
+      models: [...new Set((scope === 'question' ? allRuns.filter(item => item.settings?.question === source.settings?.question) : [source]).map(item => item.settings?.model))].sort(),
+      runs: selectedRuns,
+      observations
+    });
+  }  if (req.method === 'POST' && url.pathname === '/api/runs') {
     try {
       const input = validateRun(await readBody(req));
       const id = crypto.randomUUID();

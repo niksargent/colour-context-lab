@@ -1,4 +1,4 @@
-﻿# Colour Context Lab
+# Colour Context Lab
 
 A local, dependency-free experiment for measuring whether contextual framing changes an OpenAI model's stated favourite colour.
 
@@ -22,6 +22,11 @@ Open `http://localhost:4173`, enter an OpenAI API key, choose a model and sample
 - The UI reports raw distributions, family breakdowns, and total variation distance from the baseline family. For serious comparison, use equal sample sizes and include baseline contexts.
 
 This probes model behaviour under prompts. It does not measure human preferences or establish cultural facts.
+## Colour Atlas analytics
+
+The Colour Atlas combines successful observations from one run or every run using the same exact question. Its linked views include generated evidence-backed findings, a family/context colour heat map, baseline-distance versus diversity scatter, effective-colour rankings, a context consistency ladder, a Lab perceptual colour field with dot and density modes, and a drill-down microscope exposing the full prompt, exact vocabulary, broad hues, hypotheses, and run-to-run traces.
+
+All metrics are calculated locally from the JSONL observations. Broad-hue analysis derives a hue family from the recorded sRGB hex while preserving the raw model label and hex unchanged. Baseline distance uses total variation distance; diversity is displayed as the effective number of equally likely colours (`2^Shannon entropy`).
 
 ## Data
 
