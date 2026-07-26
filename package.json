@@ -5,7 +5,7 @@
   "description": "A controlled experiment for measuring how context shifts LLM colour preferences.",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check public/app.js && node --check public/analytics.js && node scripts/validate-contexts.js"
+    "check": "node --check server.js && node --check public/app.js && node --check public/analytics.js && node scripts/validate-contexts.js && node scripts/validate-analytics.js"
   },
   "engines": {
     "node": ">=18"

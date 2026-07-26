@@ -96,7 +96,7 @@ function renderConditionQuadrant(groups) {
     return `<circle class="condition-dot" data-quadrant-context="${d.context.id}" cx="${cx}" cy="${cy}" r="${r}" fill="${atlasFamilyColour(d.context.group)}"><title>${escapeHtml(title)}</title></circle>${important.includes(d) ? `<text class="condition-dot-label" x="${cx + r + 4}" y="${cy - r - 2}">${escapeHtml(d.context.label)}</text>` : ''}`;
   }).join('');
   target.innerHTML = `<div class="quadrant-condition-key"><b>A</b>${escapeHtml(a.label)}<span>→</span><b>B</b>${escapeHtml(b.label)}</div><svg viewBox="0 0 ${W} ${H}"><rect class="condition-quadrant-bg" x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/><line class="condition-axis" x1="${x(0)}" y1="${m.t}" x2="${x(0)}" y2="${m.t + ph}"/><line class="condition-axis" x1="${m.l}" y1="${y(0)}" x2="${m.l + pw}" y2="${y(0)}"/><text class="condition-zone" x="${m.l + 10}" y="${m.t + 18}">B: MORE DIVERSE · CLOSER TO BASELINE</text><text class="condition-zone" x="${m.l + pw - 10}" y="${m.t + 18}" text-anchor="end">B: MORE DIVERSE · FURTHER OUT</text><text class="condition-zone" x="${m.l + 10}" y="${m.t + ph - 10}">B: MORE CONSISTENT · CLOSER</text><text class="condition-zone" x="${m.l + pw - 10}" y="${m.t + ph - 10}" text-anchor="end">B: MORE CONSISTENT · FURTHER OUT</text>${marks}<text class="condition-axis-label" x="${m.l + pw / 2}" y="${H - 8}" text-anchor="middle">CHANGE IN DISTANCE FROM BASELINE (B − A) →</text><text class="condition-axis-label" transform="translate(13 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">CHANGE IN DIVERSITY (B − A) →</text></svg>`;
-  $('[data-quadrant-context]').forEach(dot => dot.addEventListener('click', () => openContextDrawer(dot.dataset.quadrantContext)));
+  $$('[data-quadrant-context]').forEach(dot => dot.addEventListener('click', () => openContextDrawer(dot.dataset.quadrantContext)));
 }
 function renderConditionComparison() {
   const groups = atlasConditionGroups().map(atlasConditionMetrics), empty = $('#atlas-compare-empty'), content = $('#atlas-comparison');
@@ -121,8 +121,8 @@ function renderConditionComparison() {
   }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, 10);
   $('#condition-divergence').innerHTML = `<div class="comparison-match-note"><b>${shared.length}</b> contexts shared across every condition</div>${contexts.map(x => `<button class="divergence-row" data-comparison-context="${x.context.id}"><span>${escapeHtml(x.context.label)}<small>${escapeHtml(x.context.group)}</small></span><i><b style="width:${x.score * 100}%"></b></i><em>${atlasPct(x.score)}</em><span class="divergence-swatches">${x.sets.map((rows, i) => { const top = atlasDist(rows)[0]; return `<i style="background:${top?.hex || '#d9dde1'}" title="${escapeHtml(groups[i].label)}: ${escapeHtml(top?.key || 'none')}"></i>`; }).join('')}</span></button>`).join('')}`;
   renderConditionQuadrant(groups);
-  $('[data-comparison-context]').forEach(row => row.addEventListener('click', () => openContextDrawer(row.dataset.comparisonContext)));
-  $('#condition-map [data-tip]').forEach(c => { c.addEventListener('mouseenter', e => atlasShowTooltip(e, c.dataset.tip)); c.addEventListener('mousemove', atlasMoveTooltip); c.addEventListener('mouseleave', atlasHideTooltip); });
+  $$('[data-comparison-context]').forEach(row => row.addEventListener('click', () => openContextDrawer(row.dataset.comparisonContext)));
+  $$('#condition-map [data-tip]').forEach(c => { c.addEventListener('mouseenter', e => atlasShowTooltip(e, c.dataset.tip)); c.addEventListener('mousemove', atlasMoveTooltip); c.addEventListener('mouseleave', atlasHideTooltip); });
 }
 const atlasPct=v=>`${Math.round(v*100)}%`,atlasNum=(v,d=1)=>Number(v||0).toFixed(d);
 function atlasHash(t){let h=2166136261;for(const c of String(t)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
@@ -153,16 +153,16 @@ function bindAtlasEvents() {
   nav.addEventListener('click', initialiseAtlas);
   $('#atlas-refresh').addEventListener('click', initialiseAtlas);
   $('#atlas-run').addEventListener('change', () => { atlasState.model = 'all'; atlasState.reasoning = 'all'; atlasState.expanded.clear(); loadAtlas(); });
-  $('[data-atlas-scope]').forEach(b => b.addEventListener('click', () => { atlasState.scope = b.dataset.atlasScope; $('[data-atlas-scope]').forEach(x => x.classList.toggle('active', x === b)); atlasState.model = 'all'; atlasState.reasoning = 'all'; atlasState.expanded.clear(); loadAtlas(); }));
+  $$('[data-atlas-scope]').forEach(b => b.addEventListener('click', () => { atlasState.scope = b.dataset.atlasScope; $$('[data-atlas-scope]').forEach(x => x.classList.toggle('active', x === b)); atlasState.model = 'all'; atlasState.reasoning = 'all'; atlasState.expanded.clear(); loadAtlas(); }));
   $('#atlas-model').addEventListener('change', e => { atlasState.model = e.target.value; atlasState.expanded.clear(); loadAtlas(); });
   $('#atlas-reasoning').addEventListener('change', e => { atlasState.reasoning = e.target.value; atlasState.expanded.clear(); loadAtlas(); });
-  $('[data-compare]').forEach(b => b.addEventListener('click', () => { atlasState.compareBy = b.dataset.compare; $('[data-compare]').forEach(x => x.classList.toggle('active', x === b)); renderConditionComparison(); }));
+  $$('[data-compare]').forEach(b => b.addEventListener('click', () => { atlasState.compareBy = b.dataset.compare; $$('[data-compare]').forEach(x => x.classList.toggle('active', x === b)); renderConditionComparison(); }));
   $('#matrix-metric').addEventListener('change', e => { atlasState.matrixMetric = e.target.value; renderConditionComparison(); });
   $('#matrix-family').addEventListener('change', e => { atlasState.matrixFamily = e.target.value; renderConditionComparison(); });
-  $('[data-resolution]').forEach(b => b.addEventListener('click', () => { atlasState.resolution = b.dataset.resolution; $('[data-resolution]').forEach(x => x.classList.toggle('active', x === b)); atlasState.expanded.clear(); renderAtlas(); }));
+  $$('[data-resolution]').forEach(b => b.addEventListener('click', () => { atlasState.resolution = b.dataset.resolution; $$('[data-resolution]').forEach(x => x.classList.toggle('active', x === b)); atlasState.expanded.clear(); renderAtlas(); }));
   $('#atlas-sort').addEventListener('change', e => { atlasState.sort = e.target.value; renderAtlasHeatmap(atlasContextMetrics(), atlasFamilyMetrics()); });
-  $('[data-map-mode]').forEach(b => b.addEventListener('click', () => { atlasState.mapMode = b.dataset.mapMode; $('[data-map-mode]').forEach(x => x.classList.toggle('active', x === b)); renderAtlasHeatmap(atlasContextMetrics(), atlasFamilyMetrics()); renderConditionComparison(); }));
-  $('[data-field]').forEach(b => b.addEventListener('click', () => { atlasState.fieldMode = b.dataset.field; $('[data-field]').forEach(x => x.classList.toggle('active', x === b)); renderPerceptualField(); }));
+  $$('[data-map-mode]').forEach(b => b.addEventListener('click', () => { atlasState.mapMode = b.dataset.mapMode; $$('[data-map-mode]').forEach(x => x.classList.toggle('active', x === b)); renderAtlasHeatmap(atlasContextMetrics(), atlasFamilyMetrics()); renderConditionComparison(); }));
+  $$('[data-field]').forEach(b => b.addEventListener('click', () => { atlasState.fieldMode = b.dataset.field; $$('[data-field]').forEach(x => x.classList.toggle('active', x === b)); renderPerceptualField(); }));
   $('#drawer-close').addEventListener('click', closeContextDrawer);
   $('#context-drawer-backdrop').addEventListener('click', closeContextDrawer);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeContextDrawer(); });
