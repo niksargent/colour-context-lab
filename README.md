@@ -81,6 +81,8 @@ The Colour Atlas analyses one run or pools every run using the same exact questi
 
 Opening the Atlas automatically refreshes its data without reloading the browser or clearing the API key field.
 
+Promising effects, evidence grades and follow-up experiments are tracked in [`RESEARCH_FINDINGS.md`](RESEARCH_FINDINGS.md).
+
 ## Experimental design
 
 The design favours a compact, interpretable first experiment rather than an enormous prompt sweep.
