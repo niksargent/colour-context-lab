@@ -1,0 +1,13 @@
+{
+  "name": "colour-context-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A controlled experiment for measuring how context shifts LLM colour preferences.",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js && node scripts/validate-contexts.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

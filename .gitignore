@@ -1,0 +1,3 @@
+﻿data/results/*.json
+data/results/*.jsonl
+!data/results/.gitkeep

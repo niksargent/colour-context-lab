@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Test how context shifts an OpenAI model's stated favourite colour.">
+  <title>Colour Context Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Colour Context Lab home">
+      <span class="brand-mark"><i></i><i></i><i></i></span>
+      <span>COLOUR<br>CONTEXT LAB</span>
+    </a>
+    <nav aria-label="Main navigation">
+      <button class="nav-link active" data-view="experiment">Experiment</button>
+      <button class="nav-link" data-view="contexts">Contexts <span id="context-count-pill">45</span></button>
+      <button class="nav-link" data-view="results">Results</button>
+    </nav>
+    <div class="top-actions">
+      <span class="privacy-note"><span class="status-dot"></span> Local &amp; private</span>
+      <button class="icon-button" id="help-button" aria-label="About this experiment">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="view active" id="view-experiment">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">BEHAVIOURAL PROBE · 01</p>
+          <h1>Does context<br>colour <em>colour?</em></h1>
+          <p class="lede">Run independent trials to see whether a model’s favourite colour changes after subtle shifts in persona, place, memory, and mood.</p>
+          <div class="hero-stats">
+            <div><strong id="hero-contexts">45</strong><span>curated contexts</span></div>
+            <div><strong id="hero-families">9</strong><span>context families</span></div>
+            <div><strong>0</strong><span>shared memories</span></div>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+          <div class="colour-card colour-card-a"><span>#1464F4</span></div>
+          <div class="colour-card colour-card-b"><span>#FFD72E</span></div>
+          <div class="colour-card colour-card-c"><span>#F04438</span></div>
+          <div class="art-label">SAME QUESTION<br><b>DIFFERENT WORLD</b></div>
+        </div>
+      </div>
+
+      <div class="workspace-grid">
+        <section class="panel setup-panel">
+          <div class="panel-heading">
+            <div><span class="step">01</span><h2>Set up the run</h2></div>
+            <span class="saved-label">Settings stay local</span>
+          </div>
+          <div class="form-grid">
+            <label class="field field-wide">
+              <span>OpenAI API key <button class="info-tip" data-tip="Held only in this browser tab and server memory for the duration of a run. Never written to disk.">i</button></span>
+              <div class="key-input"><input id="api-key" type="password" autocomplete="off" placeholder="sk-…"><button id="toggle-key" type="button">Show</button></div>
+              <small>Never saved. Requests go directly from this local app to OpenAI.</small>
+            </label>
+            <label class="field">
+              <span>Model</span>
+              <select id="model-select">
+                <option value="gpt-5.6-luna">GPT-5.6 Luna · efficient</option>
+                <option value="gpt-5.6-terra">GPT-5.6 Terra · balanced</option>
+                <option value="gpt-5.6-sol">GPT-5.6 Sol · flagship</option>
+                <option value="custom">Custom model ID…</option>
+              </select>
+              <input class="hidden" id="custom-model" placeholder="e.g. gpt-5.4-mini">
+            </label>
+            <label class="field">
+              <span>Reasoning effort</span>
+              <select id="reasoning-effort">
+                <option value="none">None · lowest overhead</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="default">Model default</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Iterations per context</span>
+              <div class="stepper"><button type="button" data-step="-1">−</button><input id="iterations" type="number" min="1" max="100" value="5"><button type="button" data-step="1">+</button></div>
+            </label>
+            <label class="field">
+              <span>Concurrent requests</span>
+              <select id="concurrency"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>6</option><option>8</option></select>
+            </label>
+            <label class="field field-wide">
+              <span>Question</span>
+              <input id="question" value="What's your favourite colour?" maxlength="300">
+              <small>Kept identical across every selected context.</small>
+            </label>
+          </div>
+          <label class="toggle-row">
+            <input id="randomize" type="checkbox" checked><span class="toggle"></span>
+            <span><b>Randomise request order</b><small>Reduces time and order effects while preserving independence.</small></span>
+          </label>
+        </section>
+
+        <section class="panel selection-panel">
+          <div class="panel-heading">
+            <div><span class="step yellow">02</span><h2>Choose contexts</h2></div>
+            <button class="text-button" id="open-contexts">Explore dataset ↗</button>
+          </div>
+          <div class="selection-toolbar">
+            <span><b id="selected-count">0</b> selected</span>
+            <button id="balanced-preset">Balanced 18</button>
+            <button id="select-all">Select all</button>
+            <button id="clear-all">Clear</button>
+          </div>
+          <div id="group-picker" class="group-picker"></div>
+          <div class="run-summary">
+            <div><span>Total API requests</span><strong id="request-total">0</strong></div>
+            <div><span>Design</span><strong>Independent</strong></div>
+            <div><span>Storage</span><strong>JSONL</strong></div>
+          </div>
+          <button class="run-button" id="run-button"><span>Run experiment</span><b>→</b></button>
+          <p class="run-warning" id="run-warning">Select contexts to calculate run size.</p>
+        </section>
+      </div>
+
+      <section class="panel live-panel hidden" id="live-panel">
+        <div class="live-copy"><span class="live-pulse"></span><div><p>RUN IN PROGRESS</p><h2 id="live-title">Collecting observations</h2></div></div>
+        <div class="progress-wrap"><div class="progress-track"><i id="progress-bar"></i></div><span id="progress-label">0 / 0</span></div>
+        <button class="stop-button" id="stop-button">Stop safely</button>
+      </section>
+    </section>
+
+    <section class="view" id="view-contexts">
+      <div class="page-head">
+        <div><p class="eyebrow">DATASET · V1</p><h1>Meet the contexts.</h1><p>Forty-five pre-registered prompts, balanced across nine families. Edit the JSON file to create your own set.</p></div>
+        <a class="file-chip" href="/api/contexts" download="contexts.json">↓ Download JSON</a>
+      </div>
+      <div class="profile-grid" id="profile-grid"></div>
+      <div class="context-controls">
+        <div class="search-box">⌕ <input id="context-search" placeholder="Search contexts, hypotheses, tags…"></div>
+        <div class="filter-pills" id="influence-filters">
+          <button class="active" data-band="all">All</button><button data-band="none">None</button><button data-band="low">Low</button><button data-band="medium">Medium</button><button data-band="high">High</button>
+        </div>
+      </div>
+      <div class="context-table-wrap">
+        <table class="context-table">
+          <thead><tr><th>Use</th><th>Context</th><th>Family</th><th>Expected influence</th><th>Pre-registered hypothesis</th></tr></thead>
+          <tbody id="context-table-body"></tbody>
+        </table>
+      </div>
+      <div class="method-note"><b>A note on interpretation</b><p>Influence ratings are hypotheses, not ground truth. Results measure prompted model behaviour—not human preferences or cultural traits. Empty and low-salience controls help separate genuine context effects from the model’s baseline distribution.</p></div>
+    </section>
+
+    <section class="view" id="view-results">
+      <div class="page-head results-head">
+        <div><p class="eyebrow">OBSERVATIONS</p><h1>What did the model choose?</h1><p>Select a completed or active run. Charts update as observations arrive.</p></div>
+        <div class="run-select-wrap"><label for="run-select">RUN</label><select id="run-select"><option value="">No runs yet</option></select></div>
+      </div>
+      <div id="empty-results" class="empty-state"><div class="empty-swatch"><i></i><i></i><i></i></div><h2>No colour votes yet</h2><p>Configure an experiment, then start a run. Every observation will appear here and remain available as a plain JSONL file.</p><button data-go="experiment">Set up experiment</button></div>
+      <div id="results-dashboard" class="hidden">
+        <div class="metric-row">
+          <article><span>Observations</span><strong id="metric-observations">0</strong><small id="metric-status">—</small></article>
+          <article><span>Distinct colours</span><strong id="metric-colours">0</strong><small>normalised names</small></article>
+          <article><span>Top colour</span><strong id="metric-top">—</strong><small id="metric-top-share">—</small></article>
+          <article><span>Median latency</span><strong id="metric-latency">—</strong><small>successful requests</small></article>
+        </div>
+        <div class="charts-grid">
+          <section class="chart-card colour-chart-card">
+            <div class="chart-head"><div><span>01 · DISTRIBUTION</span><h2 id="distribution-title">Overall colour choices</h2></div><button id="download-run">↓ JSONL</button></div>
+            <div class="chart-segmented" id="distribution-filter" aria-label="Histogram population">
+              <button class="active" data-distribution="all">All <small id="dist-count-all">0</small></button>
+              <button data-distribution="without-baseline">Without baseline <small id="dist-count-without">0</small></button>
+              <button data-distribution="baseline-only">Baseline only <small id="dist-count-baseline">0</small></button>
+            </div>
+            <div id="colour-bars" class="colour-bars"></div>
+          </section>
+          <section class="chart-card"><div class="chart-head"><div><span>02 · CONTEXT EFFECT</span><h2>Distance from baseline</h2></div></div><div id="effect-chart" class="effect-chart"></div></section>
+          <section class="chart-card chart-wide"><div class="chart-head"><div><span>03 · MAP</span><h2>Colour by context family</h2></div><div class="legend"><i class="blue"></i> Blue <i class="red"></i> Red <i class="green"></i> Green <i class="other"></i> Other</div></div><div id="family-chart" class="family-chart"></div></section>
+          <section class="chart-card chart-wide"><div class="chart-head"><div><span>04 · RAW DATA</span><h2>Latest observations</h2></div><span id="error-count"></span></div><div class="raw-table-wrap"><table class="raw-table"><thead><tr><th>#</th><th>Context</th><th>Answer</th><th>Hex</th><th>Latency</th><th>Status</th></tr></thead><tbody id="raw-results"></tbody></table></div></section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="about-dialog">
+    <button class="dialog-close" aria-label="Close">×</button>
+    <p class="eyebrow">ABOUT THE LAB</p><h2>Small prompts, measurable shifts.</h2>
+    <p>Every observation is a brand-new Responses API call: no previous response ID, no conversation history, and no awareness of other trials.</p>
+    <ul><li>Contexts and hypotheses live in <code>data/contexts.json</code>.</li><li>Run metadata is stored as JSON; observations append safely to JSONL.</li><li>Your API key is never included in either file.</li></ul>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
