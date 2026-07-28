@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "id": "981f658d-2c9d-4b0b-90bd-f243ac2424c4",
+  "status": "completed",
+  "createdAt": "2026-07-26T17:30:43.825Z",
+  "updatedAt": "2026-07-26T17:35:53.131Z",
+  "completedAt": "2026-07-26T17:35:53.131Z",
+  "completed": 225,
+  "succeeded": 225,
+  "failed": 0,
+  "total": 225,
+  "contextIds": [
+    "baseline-empty",
+    "baseline-helpful",
+    "name-amara",
+    "name-haruto",
+    "baseline-direct",
+    "baseline-reflect",
+    "baseline-new-chat",
+    "name-lucia",
+    "name-kwame",
+    "name-ananya",
+    "weather-fog",
+    "weather-first-snow",
+    "weather-humid",
+    "weather-autumn",
+    "weather-clear"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "94b1194d843894a6",
+  "settings": {
+    "model": "gpt-5.6-sol",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 15,
+    "concurrency": 2,
+    "randomize": true
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "632be27c-4273-4490-b2d3-701241d43e80",
+  "status": "completed",
+  "createdAt": "2026-07-26T10:41:37.140Z",
+  "updatedAt": "2026-07-26T10:42:07.761Z",
+  "completedAt": "2026-07-26T10:42:07.761Z",
+  "completed": 70,
+  "succeeded": 70,
+  "failed": 0,
+  "total": 70,
+  "contextIds": [
+    "country-finland",
+    "country-morocco",
+    "country-brazil",
+    "country-japan",
+    "country-new-zealand",
+    "baseline-empty",
+    "baseline-helpful"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "84c81b78c562caeb",
+  "settings": {
+    "model": "gpt-5.6-luna",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 10,
+    "concurrency": 2,
+    "randomize": true
+  }
+}

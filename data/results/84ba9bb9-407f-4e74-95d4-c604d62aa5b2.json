@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "id": "84ba9bb9-407f-4e74-95d4-c604d62aa5b2",
+  "status": "completed",
+  "createdAt": "2026-07-27T20:35:05.869Z",
+  "updatedAt": "2026-07-27T20:35:22.749Z",
+  "completedAt": "2026-07-27T20:35:22.749Z",
+  "completed": 18,
+  "succeeded": 18,
+  "failed": 0,
+  "total": 18,
+  "contextIds": [
+    "baseline-empty",
+    "baseline-helpful",
+    "name-amara",
+    "name-haruto",
+    "country-finland",
+    "country-brazil",
+    "persona-architect",
+    "persona-gardener",
+    "environment-office",
+    "environment-coast",
+    "memory-routine",
+    "memory-storm",
+    "activity-tax",
+    "activity-swim",
+    "weather-humid",
+    "weather-autumn",
+    "semantic-balance",
+    "semantic-urgency"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "6cab4e91a0ddcd6c",
+  "settings": {
+    "model": "gpt-5.6-luna",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 1,
+    "concurrency": 2,
+    "randomize": true
+  }
+}

@@ -1,3 +1,20 @@
-﻿data/results/*.json
-data/results/*.jsonl
-!data/results/.gitkeep
+tmp/
+__pycache__/
+.tools/
+
+# Publishing material and generated personal outputs stay local.
+social/
+video/
+output/
+RESEARCH_FINDINGS.md
+scripts/build_social_assets.py
+scripts/build_post0_video.py
+
+# Never add video media, regardless of location.
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.webm
+*.wmv
+*.m4v

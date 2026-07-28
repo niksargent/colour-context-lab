@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "828327f2-d330-4a09-a6b8-798b22bf11f0",
+  "status": "completed",
+  "createdAt": "2026-07-26T11:08:12.629Z",
+  "updatedAt": "2026-07-26T11:10:16.196Z",
+  "completedAt": "2026-07-26T11:10:16.196Z",
+  "completed": 221,
+  "succeeded": 221,
+  "failed": 0,
+  "total": 221,
+  "contextIds": [
+    "baseline-empty",
+    "baseline-helpful",
+    "activity-tax",
+    "activity-swim",
+    "weather-humid",
+    "weather-autumn",
+    "semantic-balance",
+    "semantic-urgency",
+    "activity-bread",
+    "activity-pottery",
+    "activity-concert",
+    "weather-fog",
+    "weather-first-snow",
+    "weather-clear",
+    "semantic-renewal",
+    "semantic-trust",
+    "semantic-mystery"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "ee481fb03cc198f6",
+  "settings": {
+    "model": "gpt-5.6-luna",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 13,
+    "concurrency": 2,
+    "randomize": true
+  }
+}

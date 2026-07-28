@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "9832c0e4-ae93-4bf2-9934-8e3a0a345bbc",
+  "status": "completed",
+  "createdAt": "2026-07-26T12:58:05.477Z",
+  "updatedAt": "2026-07-26T12:58:55.470Z",
+  "completedAt": "2026-07-26T12:58:55.470Z",
+  "completed": 100,
+  "succeeded": 100,
+  "failed": 0,
+  "total": 100,
+  "contextIds": [
+    "weather-fog",
+    "weather-first-snow",
+    "weather-humid",
+    "weather-autumn",
+    "weather-clear"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "b87b10876513fa63",
+  "settings": {
+    "model": "gpt-5.6-luna",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 20,
+    "concurrency": 2,
+    "randomize": true
+  }
+}

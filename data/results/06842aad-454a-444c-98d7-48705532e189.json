@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "06842aad-454a-444c-98d7-48705532e189",
+  "status": "completed",
+  "createdAt": "2026-07-26T11:19:29.105Z",
+  "updatedAt": "2026-07-26T11:21:14.393Z",
+  "completedAt": "2026-07-26T11:21:14.393Z",
+  "completed": 225,
+  "succeeded": 225,
+  "failed": 0,
+  "total": 225,
+  "contextIds": [
+    "weather-humid",
+    "weather-autumn",
+    "semantic-balance",
+    "semantic-urgency",
+    "weather-fog",
+    "weather-first-snow",
+    "weather-clear",
+    "semantic-renewal",
+    "semantic-trust",
+    "semantic-mystery",
+    "country-finland",
+    "country-morocco",
+    "country-brazil",
+    "country-japan",
+    "country-new-zealand"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "d56e8d57c1daf0e8",
+  "settings": {
+    "model": "gpt-5.6-luna",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 15,
+    "concurrency": 2,
+    "randomize": true
+  }
+}

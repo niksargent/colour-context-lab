@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "id": "3da6f8c2-eb24-40f3-9cbb-0bcd40428582",
+  "status": "completed",
+  "createdAt": "2026-07-27T20:53:36.442Z",
+  "updatedAt": "2026-07-27T20:53:59.331Z",
+  "completedAt": "2026-07-27T20:53:59.331Z",
+  "completed": 30,
+  "succeeded": 30,
+  "failed": 0,
+  "total": 30,
+  "contextIds": [
+    "baseline-empty",
+    "baseline-helpful",
+    "baseline-direct",
+    "baseline-reflect",
+    "baseline-new-chat",
+    "semantic-balance",
+    "semantic-renewal",
+    "semantic-urgency",
+    "semantic-trust",
+    "semantic-mystery",
+    "memory-school",
+    "memory-summer",
+    "memory-gift",
+    "memory-storm",
+    "memory-routine"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "efc2f31146555ac3",
+  "settings": {
+    "model": "gpt-5.6-luna",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 2,
+    "concurrency": 2,
+    "randomize": true
+  }
+}

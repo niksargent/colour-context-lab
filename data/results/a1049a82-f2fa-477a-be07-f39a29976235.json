@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "a1049a82-f2fa-477a-be07-f39a29976235",
+  "status": "completed",
+  "createdAt": "2026-07-26T10:52:00.940Z",
+  "updatedAt": "2026-07-26T10:53:26.565Z",
+  "completedAt": "2026-07-26T10:53:26.565Z",
+  "completed": 195,
+  "succeeded": 195,
+  "failed": 0,
+  "total": 195,
+  "contextIds": [
+    "baseline-empty",
+    "baseline-helpful",
+    "baseline-reflect",
+    "environment-library",
+    "environment-night-train",
+    "environment-market",
+    "environment-office",
+    "environment-coast",
+    "memory-school",
+    "memory-summer",
+    "memory-gift",
+    "memory-storm",
+    "memory-routine"
+  ],
+  "datasetSchemaVersion": 1,
+  "promptFingerprint": "401deb82dfd37d82",
+  "settings": {
+    "model": "gpt-5.6-luna",
+    "question": "What's your favourite colour?",
+    "reasoningEffort": "none",
+    "iterations": 15,
+    "concurrency": 2,
+    "randomize": true
+  }
+}
