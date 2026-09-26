@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 
 const root = path.resolve(__dirname, '..');
 const out = path.join(root, 'pages-dist');
@@ -10,6 +11,7 @@ fs.mkdirSync(path.join(out, 'data', 'results'), { recursive: true });
 for (const name of ['app.js', 'analytics.js', 'styles.css', 'analytics.css', 'static-api.js']) {
   fs.copyFileSync(path.join(root, 'public', name), path.join(out, name));
 }
+const version = name => crypto.createHash('sha256').update(fs.readFileSync(path.join(out, name))).digest('hex').slice(0, 12);
 fs.copyFileSync(path.join(root, 'data', 'contexts.json'), path.join(out, 'data', 'contexts.json'));
 fs.writeFileSync(path.join(out, '.nojekyll'), '');
 
@@ -29,9 +31,9 @@ const runs = fs.readdirSync(results).filter(name => name.endsWith('.json')).flat
 fs.writeFileSync(path.join(out, 'data', 'runs.json'), JSON.stringify(runs));
 
 let html = fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8');
-html = html.replaceAll('href="/styles.css"', 'href="./styles.css"').replaceAll('href="/analytics.css"', 'href="./analytics.css"');
-html = html.replace('src="/app.js"', 'src="./app.js"').replace('src="/analytics.js?v=6"', 'src="./analytics.js?v=6"');
-html = html.replace('<script src="./app.js" defer></script>', '<script src="./static-api.js" defer></script>\n  <script src="./app.js" defer></script>');
+html = html.replaceAll('href="/styles.css"', `href="./styles.css?v=${version('styles.css')}"`).replaceAll('href="/analytics.css"', `href="./analytics.css?v=${version('analytics.css')}"`);
+html = html.replace('src="/app.js"', `src="./app.js?v=${version('app.js')}"`).replace('src="/analytics.js?v=6"', `src="./analytics.js?v=${version('analytics.js')}"`);
+html = html.replace('<script src="./app.js', `<script src="./static-api.js?v=${version('static-api.js')}" defer></script>\n  <script src="./app.js`);
 html = html.replace('<button class="nav-link active" data-view="experiment">Experiment</button>', '');
 html = html.replace('<span class="privacy-note"><span class="status-dot"></span> Local &amp; private</span>', '<span class="privacy-note"><span class="status-dot"></span> Published results · read-only</span>');
 html = html.replace('Configure an experiment, then start a run.', 'Explore the published experiment data.');
