@@ -1,5 +1,11 @@
 # Colour Context Lab
 
+## Public portfolio demo
+
+`npm run build:pages` creates a read-only GitHub Pages version in `pages-dist/`. It opens on the Colour Atlas and includes the committed context dataset and completed run observations. The existing local server and experiment workflow remain unchanged. The Pages version does not accept API keys or start new runs.
+
+The repository's Pages workflow builds and deploys this version on pushes to `main`.
+
 > **How far can a few words move a machine’s favourite colour?**
 
 Colour Context Lab is an open-ended behavioural experiment for exploring how context changes an AI model’s answer to one deceptively simple question:

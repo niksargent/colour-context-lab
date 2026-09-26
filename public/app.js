@@ -29,6 +29,7 @@ function toast(message, error = false) {
 }
 
 async function api(path, options) {
+  if (window.staticApi) return window.staticApi(path, options);
   const response = await fetch(path, options);
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
@@ -197,7 +198,7 @@ function renderResults(payload) {
     const name = normaliseColour(row.colour);
     return `<tr><td>${row.requestOrder}</td><td>${escapeHtml(row.contextId)}</td><td class="answer-cell">${row.status === 'ok' ? `<i class="swatch" style="background:${colourHex(name,row.hex)}"></i>${escapeHtml(name)}` : escapeHtml(row.error || '—')}</td><td>${escapeHtml(row.hex || '—')}</td><td>${row.latencyMs}ms</td><td class="status-${row.status}">${row.status}</td></tr>`;
   }).join('');
-  $('#download-run').onclick = () => { window.location.href = `/api/runs/${meta.id}/download`; };
+  $('#download-run').onclick = () => { window.location.href = window.staticApi ? `./data/results/${meta.id}.jsonl` : `/api/runs/${meta.id}/download`; };
 }
 async function loadRun(id, quiet = false) {
   if (!id) return;
@@ -294,4 +295,9 @@ async function init() {
   } catch (error) { toast(`Could not load the lab: ${error.message}`, true); }
 }
 
-init();
+init().then(() => {
+  if (window.staticApi) {
+    showView('analytics');
+    initialiseAtlas();
+  }
+});
