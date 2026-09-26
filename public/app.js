@@ -219,7 +219,9 @@ function showLive(meta) {
 }
 
 function finishLive(meta) {
-  if (!$('#live-panel').classList.contains('hidden')) toast(`Run ${meta.status}: ${meta.succeeded} successful, ${meta.failed} failed.`);
+  const wasLive = !$('#live-panel').classList.contains('hidden') || state.polling !== null;
+  if (!wasLive) return;
+  toast(`Run ${meta.status}: ${meta.succeeded} successful, ${meta.failed} failed.`);
   $('#live-panel').classList.add('hidden');
   clearInterval(state.polling);
   state.polling = null;
