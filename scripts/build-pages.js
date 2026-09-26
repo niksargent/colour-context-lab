@@ -43,6 +43,7 @@ html = html.replace('</head>', '  <style>#view-experiment{display:none!important
 html = html.replace('<section class="view active" id="view-experiment">', '<section class="view" id="view-experiment">');
 html = html.replace('<section class="view" id="view-analytics">', '<section class="view active" id="view-analytics">');
 html = html.replace('<button class="nav-link" data-view="analytics">', '<button class="nav-link active" data-view="analytics">');
+html = html.replace('<button data-atlas-scope="run">This run</button><button class="active" data-atlas-scope="question">All with this question</button>', '<button class="active" data-atlas-scope="run">This run</button>');
 html = html.replace('<p>Every observation is a brand-new Responses API call:', '<p>This published version shows completed experiments. Every observation was a brand-new Responses API call:');
 html = html.replace('<li>Your API key is never included in either file.</li>', '<li>The published data contains no API keys.</li>');
 fs.writeFileSync(path.join(out, 'index.html'), html);
